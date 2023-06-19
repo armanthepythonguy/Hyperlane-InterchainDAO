@@ -2,5 +2,6 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-
+solc_version = "0.8.19"
+ETHERSCAN_API_KEY="MTZP6QMPK5VNC6NG8D5KWXAYWY1IK72BF7"
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
