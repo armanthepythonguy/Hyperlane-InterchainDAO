@@ -2,43 +2,9 @@
 
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IL1Governor{
-    function castVoteWithReasonAndParams(
-        uint256 proposalId,
-        uint8 support,
-        string calldata reason,
-        bytes memory params
-    ) external returns (uint256);
-}
-
-interface IMailBox{
-    function dispatch(
-        uint32 _destination,
-        bytes32 _recipient,
-        bytes calldata _body
-    ) external returns (bytes32);
-}
-
-interface IInterchainGasPaymaster {
-    event GasPayment(
-        bytes32 indexed messageId,
-        uint256 gasAmount,
-        uint256 payment
-    );
-
-    function payForGas(
-        bytes32 _messageId,
-        uint32 _destinationDomain,
-        uint256 _gasAmount,
-        address _refundAddress
-    ) external payable;
-
-    function quoteGasPayment(uint32 _destinationDomain, uint256 _gasAmount)
-        external
-        view
-        returns (uint256);
-}
+import "@hyperlane-xyz/core/contracts/interfaces/IInterchainGasPaymaster.sol";
+import "@hyperlane-xyz/core/contracts/interfaces/IMailbox.sol";
+import "@openzeppelin/contracts/governance/IGovernor.sol";
 
 contract L1VoteDelegator is Ownable{
     address public L1Governor;
@@ -60,7 +26,7 @@ contract L1VoteDelegator is Ownable{
         L2Bridge = _L2Bridge;
     }
     function bridgeProposal(bytes memory _data) external{
-        bytes32 messageId = IMailBox(mailBox).dispatch(
+        bytes32 messageId = IMailbox(mailBox).dispatch(
             L2Domain,
             addressToBytes32(L2Bridge),
             _data
@@ -78,7 +44,7 @@ contract L1VoteDelegator is Ownable{
         address sender = bytes32ToAddress(_sender);
         require(sender == L2Bridge, "Only the L2Bridge can send votes !!!");
         (uint256 proposalId, bytes memory data) = abi.decode(_body, (uint256,bytes));
-        IL1Governor(L1Governor).castVoteWithReasonAndParams(proposalId, 0, "", data);
+        IGovernor(L1Governor).castVoteWithReasonAndParams(proposalId, 0, "", data);
     }
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(_addr)));

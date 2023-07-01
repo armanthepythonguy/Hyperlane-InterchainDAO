@@ -10,10 +10,8 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "./interfaces/IL1VoteDelegator.sol";
 
-interface IL1VoteDelegator{
-    function bridgeProposal(bytes memory _data) external;
-}
 
 /**
  * @notice Extension of {Governor} for 3 option fractional vote counting. When

@@ -1,1 +1,2 @@
 @openzeppelin/=node_modules/@openzeppelin/
+@hyperlane-xyz/=node_modules/@hyperlane-xyz/
