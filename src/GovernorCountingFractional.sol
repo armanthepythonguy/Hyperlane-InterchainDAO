@@ -22,7 +22,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  * held by a bridge, or voting privately from a shielded pool using zero
  * knowledge proofs.
  */
-contract L2GovernorCountingFractional is Governor, GovernorSettings, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl{
+contract GovernorCountingFractional is Governor, GovernorSettings, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl{
 
     struct ProposalVote {
         uint128 againstVotes;

@@ -25,19 +25,27 @@ contract L1VoteDelegator is Ownable{
         L1Governor = _L1Governor;
         L2Bridge = _L2Bridge;
     }
-    function bridgeProposal(bytes memory _data) external{
-        bytes32 messageId = IMailbox(mailBox).dispatch(
-            L2Domain,
-            addressToBytes32(L2Bridge),
-            _data
-        );
-        uint256 quote = IInterchainGasPaymaster(interchainGasPaymaster).quoteGasPayment(L2Domain, 200000);
-        IInterchainGasPaymaster(interchainGasPaymaster).payForGas{value: quote}(
-            messageId,
-            L2Domain,
-            200000,
-            address(this)
-        );
+    function bridgeProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description) external{
+        uint256 proposalId = IGovernor(L1Governor).hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+        IGovernor.ProposalState proposalState = IGovernor(L1Governor).state(proposalId);
+        if(proposalState == IGovernor.ProposalState.Active){
+            bytes32 messageId = IMailbox(mailBox).dispatch(
+                L2Domain,
+                addressToBytes32(L2Bridge),
+                abi.encode(targets, values, calldatas, description)
+            );
+            uint256 quote = IInterchainGasPaymaster(interchainGasPaymaster).quoteGasPayment(L2Domain, 200000);
+            IInterchainGasPaymaster(interchainGasPaymaster).payForGas{value: quote}(
+                messageId,
+                L2Domain,
+                200000,
+                address(this)
+            );
+        }
     }
     function handle(uint32 _origin, bytes32 _sender, bytes memory _body) external onlyMailbox() {
         require(_origin == L2Domain, "Only messages from L2Domain is accepted !!");
