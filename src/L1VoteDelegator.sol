@@ -29,7 +29,7 @@ contract L1VoteDelegator is Ownable{
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        string memory description) external{
+        string memory description) external payable{
         uint256 proposalId = IGovernor(L1Governor).hashProposal(targets, values, calldatas, keccak256(bytes(description)));
         IGovernor.ProposalState proposalState = IGovernor(L1Governor).state(proposalId);
         if(proposalState == IGovernor.ProposalState.Active){

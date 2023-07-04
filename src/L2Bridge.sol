@@ -26,7 +26,7 @@ contract L2Bridge is Ownable{
         L2Governor = _L2Governor;
         L1VoteDelegator = _L1VoteDelegator;
     }
-    function bridgeVotes(uint256 _proposalId) external{
+    function bridgeVotes(uint256 _proposalId) external payable{
         uint256 proposalDeadlineBlock = IL2Governor(L2Governor).proposalDeadline(_proposalId);
         require(block.number >= proposalDeadlineBlock, "Wait till the proposal deadline is over to export the votes !!");
         (uint256 aganistVotes, uint256 forVotes, uint256 abstainVotes) = IL2Governor(L2Governor).proposalVotes(_proposalId);
