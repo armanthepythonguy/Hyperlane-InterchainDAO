@@ -50,9 +50,9 @@ contract GovernorCountingFractional is Governor, GovernorSettings, GovernorVotes
      */
     mapping(address => uint128) public fractionalVoteNonce;
 
-    constructor(IVotes _token, TimelockController _timelock)
+    constructor(IVotes _token, TimelockController _timelock, uint256 _votingperiod)
         Governor("MyGovernor")
-        GovernorSettings(0 /* 1 day */, 250 /* 1 week */, 0)
+        GovernorSettings(0 /* 1 day */, _votingperiod /* 1 week */, 0)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
         GovernorTimelockControl(_timelock)
