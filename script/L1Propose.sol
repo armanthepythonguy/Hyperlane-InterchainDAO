@@ -11,7 +11,7 @@ contract L1Propose is Script{
     function run() external{
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        address L1GovernorAddress = "L1 Governor Address";
+        address L1GovernorAddress = 0xdDc03f1B3b2619cB1D67E5b2B5F3c7E4c5C295f0; // Replace this with L1Governor Address
         address[] memory targets = new address[](1);
         targets[0] = 0xbA46496e7E5A61a7A9DF5e54Ea330aD20C006d00;
         uint256[] memory values = new uint256[](1);

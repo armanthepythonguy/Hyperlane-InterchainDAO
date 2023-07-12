@@ -10,7 +10,7 @@ contract L1Delegate is Script{
     function run() external{
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        address L1VoteDelegatorAddress = "L1VoteDelegatorAddress";
+        address L1VoteDelegatorAddress = 0x033C68A4165bCF3094F5D7C49680fe7ec21cACAF; // Replace this with L1 VoteDelegator contract
         address[] memory targets = new address[](1);
         targets[0] = 0xbA46496e7E5A61a7A9DF5e54Ea330aD20C006d00;
         uint256[] memory values = new uint256[](1);
