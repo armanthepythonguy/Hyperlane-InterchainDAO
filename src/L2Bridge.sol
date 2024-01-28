@@ -12,15 +12,13 @@ contract L2Bridge is Ownable{
     address public L1VoteDelegator;
     uint32 public L1Domain;
     address public mailBox;
-    address public interchainGasPaymaster;
     modifier onlyMailbox{
         require(msg.sender == mailBox, "Only mailbox can send data !!!!");
         _;
     }
-    constructor(address _mailBox, address _interchainGasPaymaster, uint32 _L1Domain){
+    constructor(address _mailBox, uint32 _L1Domain){
         L1Domain = _L1Domain;
         mailBox = _mailBox;
-        interchainGasPaymaster = _interchainGasPaymaster;
     }
     function init(address _L2Governor, address _L1VoteDelegator) external onlyOwner{
         L2Governor = _L2Governor;
@@ -30,17 +28,16 @@ contract L2Bridge is Ownable{
         uint256 proposalDeadlineBlock = IL2Governor(L2Governor).proposalDeadline(_proposalId);
         require(block.number >= proposalDeadlineBlock, "Wait till the proposal deadline is over to export the votes !!");
         (uint256 aganistVotes, uint256 forVotes, uint256 abstainVotes) = IL2Governor(L2Governor).proposalVotes(_proposalId);
-        bytes32 messageId = IMailbox(mailBox).dispatch(
+        
+        uint256 quote = IMailbox(mailBox).quoteDispatch(
             L1Domain,
             addressToBytes32(L1VoteDelegator),
             abi.encode(_proposalId, abi.encodePacked(uint128(aganistVotes), uint128(forVotes), uint128(abstainVotes)))
         );
-        uint256 quote = IInterchainGasPaymaster(interchainGasPaymaster).quoteGasPayment(L1Domain, 200000);
-        IInterchainGasPaymaster(interchainGasPaymaster).payForGas{value: quote}(
-            messageId,
+        IMailbox(mailBox).dispatch{value: quote}(
             L1Domain,
-            200000,
-            address(this)
+            addressToBytes32(L1VoteDelegator),
+            abi.encode(_proposalId, abi.encodePacked(uint128(aganistVotes), uint128(forVotes), uint128(abstainVotes)))
         );
     }
     function handle(uint32 _origin, bytes32 _sender, bytes memory _body) external onlyMailbox() {
