@@ -2,55 +2,49 @@
 
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@hyperlane-xyz/core/contracts/interfaces/IInterchainGasPaymaster.sol";
 import "@hyperlane-xyz/core/contracts/interfaces/IMailbox.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 
 contract L1VoteDelegator is Ownable{
     address public L1Governor;
-    address public L2Bridge;
-    uint32 public L2Domain;
+    mapping(uint32 => address) public L2Bridges;
     address public mailBox;
-    address public interchainGasPaymaster;
     modifier onlyMailbox{
         require(msg.sender == mailBox, "Only mailbox can send data !!!!");
         _;
     }
-    constructor(address _mailBox, address _interchainGasPaymaster, uint32 _L2Domain){
-        L2Domain = _L2Domain;
+    constructor(address _mailBox, address _L1Governor){
         mailBox = _mailBox;
-        interchainGasPaymaster = _interchainGasPaymaster;
-    }
-    function init(address _L1Governor, address _L2Bridge) external onlyOwner{
         L1Governor = _L1Governor;
-        L2Bridge = _L2Bridge;
+    }
+    function addRemote(uint32 _domainId, address _bridge) external onlyOwner(){
+        L2Bridges[_domainId] = _bridge;
     }
     function bridgeProposal(
+        uint32 _L2Domain,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description) external payable{
+        require(L2Bridges[_L2Domain]!=address(0), "Remote not registered !!!");
         uint256 proposalId = IGovernor(L1Governor).hashProposal(targets, values, calldatas, keccak256(bytes(description)));
         IGovernor.ProposalState proposalState = IGovernor(L1Governor).state(proposalId);
         if(proposalState == IGovernor.ProposalState.Active){
-            bytes32 messageId = IMailbox(mailBox).dispatch(
-                L2Domain,
-                addressToBytes32(L2Bridge),
+            uint256 quote = IMailbox(mailBox).quoteDispatch(
+                _L2Domain,
+                addressToBytes32(L2Bridges[_L2Domain]),
                 abi.encode(targets, values, calldatas, description)
             );
-            uint256 quote = IInterchainGasPaymaster(interchainGasPaymaster).quoteGasPayment(L2Domain, 200000);
-            IInterchainGasPaymaster(interchainGasPaymaster).payForGas{value: quote}(
-                messageId,
-                L2Domain,
-                200000,
-                address(this)
+            IMailbox(mailBox).dispatch{value: quote}(
+                _L2Domain,
+                addressToBytes32(L2Bridges[_L2Domain]),
+                abi.encode(targets, values, calldatas, description)
             );
         }
     }
     function handle(uint32 _origin, bytes32 _sender, bytes memory _body) external onlyMailbox() {
-        require(_origin == L2Domain, "Only messages from L2Domain is accepted !!");
         address sender = bytes32ToAddress(_sender);
-        require(sender == L2Bridge, "Only the L2Bridge can send votes !!!");
+        require(sender == L2Bridges[_origin], "Only the L2Bridge can send votes !!!");
         (uint256 proposalId, bytes memory data) = abi.decode(_body, (uint256,bytes));
         IGovernor(L1Governor).castVoteWithReasonAndParams(proposalId, 0, "", data);
     }
